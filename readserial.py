@@ -10,7 +10,7 @@
 #2011/09/15
 
 import serial
-import mosquitto
+import paho.mqtt.client as paho
 import os
 
 serialdev = '/dev/ttyUSB0'
@@ -18,9 +18,10 @@ broker = "127.0.0.1"
 port = 1883
 
 
+
 #MQTT callbacks
 
-def on_connect(rc):
+def on_connect(self, _userdata, flags_dict, rc):
     if rc == 0:
     #rc 0 successful connect
         print "Connected"
@@ -28,7 +29,7 @@ def on_connect(rc):
         raise Exception
 
 
-def on_publish(val):
+def on_publish(self, _userdata, val):
     print "Published ", val
 
 
@@ -44,7 +45,7 @@ def cleanup():
 try:
     print "Connecting... ", serialdev
     #connect to serial port
-    ser = serial.Serial(serialdev, 9600, timeout=20)
+    ser = serial.Serial(serialdev, 9600, timeout=60)
 except:
     print "Failed to connect serial"
     #unable to continue with no serial input
@@ -56,24 +57,21 @@ try:
     #create an mqtt client
     mypid = os.getpid()
     client_uniq = "arduino_pub_"+str(mypid)
-    mqttc = mosquitto.Mosquitto(client_uniq)
+    mqttc = paho.Client(client_uniq)
 
     #attach MQTT callbacks
     mqttc.on_connect = on_connect
     mqttc.on_publish = on_publish
 
     #connect to broker
-    mqttc.connect(broker, port, 60, True)
+    mqttc.connect(broker, port, 600)
 
     #remain connected to broker
     #read data from serial and publish
     while mqttc.loop() == 0:
         line = ser.readline()
-        #split line as it contains V,temp
-        list = line.split(",")
-        #second list element is temp
-        temp = list[1].rstrip()
-        mqttc.publish("arduino/temp", temp)
+        #print(line)
+        mqttc.publish("arduino/sensor", line)
         pass
 
 
