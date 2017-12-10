@@ -1,0 +1,13 @@
+# Example configuration.yaml entry
+ default_view:
+    view: yes
+    icon: mdi:home 
+    entities:
+      - group.garage
+ garage:
+    name: garage
+    entities:
+      - sensor.humidite
+      - sensor.temperature
+
+
